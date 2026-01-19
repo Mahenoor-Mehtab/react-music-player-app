@@ -1,5 +1,5 @@
 import React, { createContext } from 'react'
-import { useContext, useEffect, useRef , useState} from 'react'
+import {  useEffect , useState} from 'react'
 const songs = [
   {
     id: 1,
@@ -59,8 +59,24 @@ const MusicProvider = ({children}) => {
         const [currentTime , setCurrentTime] = useState(0);
         const [duration , setDuration] = useState(0);
         const [isPlaying , setIsPlaying] = useState(false);
-          const [playlists , setPlaylists] = useState([])
+        const [playlists , setPlaylists] = useState([])
     
+        //! local storage:
+        useEffect(()=>{
+    const savedPlaylists = localStorage.getItem("musicPlayerPlaylists")
+    if(savedPlaylists){
+      const playlists= JSON.parse(savedPlaylists)
+      setPlaylists(playlists)
+    }
+        },[])
+        useEffect(()=>{
+          if(playlists.length > 0){
+            localStorage.setItem("musicPlayerPlaylists", JSON.stringify(playlists))
+          }
+          else{
+            localStorage.removeItem("musicPlayerPlaylists")
+          }
+        },[playlists])
     
         const handlePlaySong = (song , index) =>{
             setCurrentSong(song);
@@ -112,11 +128,27 @@ const MusicProvider = ({children}) => {
                 songs:[]
             };
             setPlaylists((prev)=> [...prev, newPlaylist])
+         }
 
+        //! add song to playlist functions:
+        const addSongPlaylist = (playlistId, song)=>{
+          setPlaylists((prev)=> prev.map((playlist)=>{
+            if(playlist.id === playlistId){
+              return {...playlist, songs: [...playlist.songs , song]};
+            }
+            else{
+              return playlist;
+            }
+          }))
         }
 
+        //! delete playlist:
+  const deletePlaylist = (playlistId)=>{
+setPlaylists((prev)=> prev.filter((playlist)=> playlist.id !== playlistId))
+  }
+
         const values = {
-            allSongs, handlePlaySong, currentSongIndex, currentSong, formateTime , currentTime , duration , setDuration, setCurrentTime, nextTrack, prevTrack, play , pause , isPlaying , createPlaylist, playlists
+            allSongs, handlePlaySong, currentSongIndex, currentSong, formateTime , currentTime , duration , setDuration, setCurrentTime, nextTrack, prevTrack, play , pause , isPlaying , createPlaylist, playlists, addSongPlaylist, deletePlaylist, setCurrentSong
         }
   return (
    <MusicContext.Provider value={values}>
