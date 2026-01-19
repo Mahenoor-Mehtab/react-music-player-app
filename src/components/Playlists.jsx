@@ -9,7 +9,7 @@ const Playlists = () => {
   const [showDropdown, setShowDropdown] = useState(false)
 
   // Added deletePlaylist to match your handleDelete call
-  const { createPlaylist, playlists, deletePlaylist, allSongs } = useContext(MusicContext);
+  const { createPlaylist, playlists,  allSongs , addSongPlaylist, deletePlaylist, currentSongIndex , setCurrentSong, handlePlaySong} = useContext(MusicContext);
 
   const filteredSong = allSongs.filter((song) => {
     const matches = song.name.toLowerCase().includes(searchQuery.toLowerCase()) || song.artist.toLowerCase().includes(searchQuery.toLowerCase())
@@ -26,11 +26,26 @@ const Playlists = () => {
     }
   }
 
-  const handleAddSong = () => {
-    if (newPlaylistName.trim()) {
-      createPlaylist(newPlaylistName.trim());
-      setNewPlaylistName("");
+  const handleAddSong = (song) => {
+    if(selectedPlaylist){
+      addSongPlaylist(selectedPlaylist.id , song);
+      setSearchQuery("")
+      setShowDropdown(false)
     }
+    
+  }
+
+  const deletePlaylistConfirmation = (playlist)=>{
+    if(window.confirm(`Are you sure you want to delete "${playlist.name}" ?`)){
+      deletePlaylist(playlist.id)
+
+    }
+
+  }
+
+  const handlePlayFromPlaylist = (song)=>{
+ const globalIndex = allSongs.findIndex((s)=> s.id === song.id)
+handlePlaySong(song , globalIndex)
   }
 
   return (
@@ -94,10 +109,9 @@ const Playlists = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    deletePlaylist(playlist.id);
+                   deletePlaylistConfirmation(playlist);
                   }}
-                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 
-                             rounded-full transition-colors shrink-0"
+                  className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10  rounded-full transition-colors shrink-0"
                 >
                   <Trash size={16} />
                 </button>
@@ -164,6 +178,47 @@ const Playlists = () => {
                 }
 
               </div>
+            <div className="mt-4 space-y-2">
+  {playlist.songs.length === 0 ? (
+    <p className="text-sm text-gray-400 italic">
+      No songs in this playlist
+    </p>
+  ) : (
+    playlist.songs.map((song, index) => (
+     <div
+  key={song.id || index}
+  className={`flex items-center justify-between
+    px-3 py-2 rounded-lg transition
+    ${
+      selectedPlaylist?.id === playlist.id &&
+      currentSongIndex === allSongs.findIndex((s) => s.id === song.id)
+        ? "bg-purple-900/40 border border-purple-500"
+        : "bg-gray-800/60 border border-gray-700 hover:border-purple-500/50"
+    }
+  `}
+  onClick={() => {
+    setSelectedPlaylist(playlist);   
+    handlePlayFromPlaylist(song);
+  }}
+>
+
+        {/* Song Info */}
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-medium text-white truncate">
+            {song.name}
+          </span>
+          <span className="text-xs text-gray-400 truncate">
+            {song.artist}
+          </span>
+        </div>
+        <span className="text-xs text-gray-500">
+          {song.duration || ""}
+        </span>
+      </div>
+    ))
+  )}
+</div>
+
             </div>
           ))
         )}
